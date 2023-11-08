@@ -1,7 +1,7 @@
 const express = require("express");
 const { homepage , studentsignup,studentsignin,studentsignout,currentuser,studentsendmail,
-    studentforgetlink,studentresetpassword,studentupdate,studentavatar,applyinternship,applyjob
- } = require("../controllers/indexControllers");
+    studentforgetlink,studentresetpassword,studentupdate,studentavatar,applyinternship,applyjob,
+    readalljobs,readallinternships} = require("../controllers/indexControllers");
 const { isAuthenticated } = require("../middlewares/auth");
 const router = express.Router();
 
@@ -28,7 +28,7 @@ router.get("/student/signout",isAuthenticated ,studentsignout);
 router.post("/student/send-mail" ,studentsendmail);
 
 // GET / students/forget-link/student:id
-router.get("/student/forget-link/:id" ,studentforgetlink);
+router.get("/student/forget-link/" ,studentforgetlink);
 
 // POST /student/reset-password
 router.post("/student/reset-password/:id" ,isAuthenticated ,studentresetpassword);
@@ -38,6 +38,15 @@ router.post("/student/update/:id" ,isAuthenticated ,studentupdate);
 
 // POST /student/avatar/student:id
 router.post("/student/avatar/:id" ,isAuthenticated ,studentavatar);
+
+// ===========================read all jobs===============================
+router.post("/student/alljobs/",isAuthenticated,readalljobs);
+
+
+
+// ===========================read all internships===============================
+router.post("/student/allinternships/",isAuthenticated,readallinternships);
+
 
 
 

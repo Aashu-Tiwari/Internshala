@@ -1,8 +1,8 @@
 
 const {CatchAsyncErrors} = require("../middlewares/CatchAsyncErrors");
+const Job = require("../Models/jobModel");
 const Student = require("../Models/StudentModel");
 const Internship = require("../Models/internshipsModel");
-const Job = require("../Models/jobModel");
 const ErrorHandler = require("../utils/ErrorHandler");
 const { sendmail } = require("../utils/nodemailer");
 const { sendtoken } = require("../utils/SendToken");
@@ -14,9 +14,12 @@ exports.homepage = CatchAsyncErrors(async(req,res,next)=>{
 })
 
 exports.currentuser = CatchAsyncErrors(async(req,res,next)=>{
-        const student = await Student.findById(req.id).exec();
-        res.json({student})
-})
+        const student = await Student.findById(req.id)
+        .populate({path:"jobs",model:"Job"})
+        .populate("internships")
+        .exec();
+        res.json({student});
+});
 
 exports.studentsignup = CatchAsyncErrors(async(req,res,next)=>{
         const student = await new Student(req.body).save();
@@ -52,24 +55,25 @@ exports.studentsendmail = CatchAsyncErrors(async(req,res,next)=>{
                 return next(
                         new ErrorHandler("User not found with this email address",404)
         );
-        const url = `${req.protocol}://${req.get("host")}/student/forget-link/${student._id}`;
+        const url = Math.floor(Math.random()*9000+1000);
         sendmail(req,res,next,url);
-        student.resetpasswordToken = "1";
+        student.resetpasswordToken = `${url}`;
         await student.save()
-        res.json({student,url});
+        res.json({message:"mail sent successfully check inbox/spam"});
 })
 
 
 exports.studentforgetlink = CatchAsyncErrors(async(req,res,next)=>{
-        const student = await Student.findById(req.params.id).exec()
+        const student = await Student.findOne({email:req.body.email}).exec()
 
         if (!student)
                 return next(
                         new ErrorHandler("User not found with this email address",404)
         );
-        if(student.resetpasswordToken=="1"){
+        if(student.resetpasswordToken==req.body.otp){
                 student.resetpasswordToken = "0"
                 student.password = req.body.password;
+                await student.save();
         }else{
                 return next(
                         new ErrorHandler("Invalid Reset Password Link! Please Try Again",500)
@@ -140,7 +144,22 @@ exports.applyinternship = CatchAsyncErrors(async(req,res,next)=>{
 
         res.json({student, internship})
 })
+// =========================read all jobs===============================
 
+exports.readalljobs = CatchAsyncErrors(async (req,res,next)=>{
+        const jobs = await Job.find().exec();
+
+        res.status(200).json({jobs})
+});
+
+
+// =========================read all internships===============================
+
+exports.readallinternships = CatchAsyncErrors(async (req,res,next)=>{
+        const internships = await Internship.find().exec();
+
+        res.status(200).json({internships})
+});
 
 // =========================apply job ===================================
 
